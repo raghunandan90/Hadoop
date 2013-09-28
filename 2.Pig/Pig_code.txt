@@ -1,0 +1,98 @@
+CODE:
+
+Pig version : Apache Pig version 0.8.0-cdh3u0 
+export JAVA_HOME=/usr/lib/jvm/java-6-sun-1.6.0.24/
+
+#Preprocessing
+#Input dataset had "::" as delimiter but PigStorage supports single-character delimiter only. So need to change delimiter from "::" to "\t"
+sed 's/::/\t/g' movies.dat > movies_altered.dat
+
+#copy dataset from local path to hdfs for PIG load
+hadoop dfs -copyFromLocal '<local dataset path>' '<location in hdfs>'
+
+PIG SCRIPTS : 
+Executed pig in map-reduce mode
+(USEFUL commands: describe, explain, dump)
+
+1.Find tags associated with each movie.
+
+--Load movies
+movies = load '/user/cloudera/movies.dat' using PigStorage('\t')  as (movieid:int, title:chararray, genres:chararray);
+
+--load tags
+tags = load '/user/cloudera/tags.dat' using PigStorage('\t')  as (userid:int, movieid:int, tags:chararray, timestamp:long);
+
+--join movies and tags by movieid
+movies_tags = join tags by movieid , movies by movieid;
+
+--group the movie_tags by title
+grouped = group movies_tags  by title;
+
+--generate all tags for each title
+title_tags = foreach grouped generate $0, movies_tags.tags;
+
+--store output to folder "titletagsoutput"
+Store  title_tags into 'titletagsoutput' using PigStorage();
+
+
+2.Find top 100 movies with maximum average ratings. 
+
+-Load movies
+movies = load '/user/cloudera/movies.dat' using PigStorage('\t')  as (movieid:int, title:chararray, genres:chararray);
+
+--load rating
+ratings = load '/user/cloudera/ratings.dat' using PigStorage('\t')  as (userid:int, movieid:int, rating:float, timestamp:long);
+
+--join ratings and movies by movieid
+movie_ratings = join ratings by movieid, movies by movieid;
+
+--group movie ratings by title
+ratings_grouped =  group movie_ratings by title;
+
+--generate average ratings for each title
+title_ratings = foreach ratings_grouped generate $0, AVG(movie_ratings.rating);
+
+--order by descending value of averages
+desc_title_ratings = order title_ratings by avgratings desc;
+
+--limit the rows to top 100
+top100_titleratings = limit desc_title_ratings 100;
+
+--store output to avgratings folder
+Store  top100_titleratings into 'avgratings' using PigStorage();
+
+3.Find top 10 movies in each genre.  
+
+--load movies
+movies = load '/user/cloudera/movies.dat' using PigStorage('\t')  as (movieid:int, title:chararray, genres:chararray);
+
+--load rating
+ratings = load '/user/cloudera/ratings.dat' using PigStorage('\t')  as (userid:int, movieid:int, rating:float, timestamp:long);
+
+--genre is separated by ‘|’ in the dataset but we cannot directly tokenize it
+--hence replacing ‘|’ by ‘*’ and then tokenizing it.
+movies_replaced = foreach movies generate $0, $1,REPLACE($2,'\\|','*') as genres;
+
+movies_mod = foreach movies_replaced generate $0, $1, FLATTEN(TOKENIZE($2)) as genres;
+
+movie_ratings = join ratings by movieid, movies_mod by movieid;
+
+grouped = group movie_ratings by (movies_mod::genres, movies_mod::movieid);
+
+genre_ratings = foreach grouped generate $0, AVG(movie_ratings.rating) as avgratings;
+
+genre_ratings_grouped = group genre_ratings by group.genres;
+
+--retrieve only top 10 rows
+top10 = foreach genre_ratings_grouped{
+        sorted = order genre_ratings by avgratings desc;
+        top    = limit sorted 10;
+        generate group, flatten(top);
+};
+
+Store  top10  into 'top10genres' using PigStorage();
+
+
+#copy output from hdfs  to local path
+hadoop dfs -copyToLocal  '<location in hdfs>' '<local dataset path>'
+

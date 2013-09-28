@@ -1,0 +1,36 @@
+HIVE PROJECT
+USE CASE:
+Analysing youtube data
+
+DataSet details: 
+http://netsg.cs.sfu.ca/youtubedata/
+
+Given a video ID, the crawler first extracts information from the YouTube API, which contains all the meta-data except age, category and related videos. The crawler then scrapes the video's webpage to obtain the remaining information
+
+Dataset description : 
+video ID	an 11-digit string, which is unique
+uploader	a string of the video uploader's username
+age	an integer number of days between the date when the video was uploaded and Feb.15, 2007 (YouTube's establishment)
+category	a string of the video category chosen by the uploader
+length	an integer number of the video length
+views	an integer number of the views
+rate	a float number of the video rate
+ratings	an integer number of the ratings
+comments	an integer number of the comments
+related IDs	up to 20 strings of the related video IDs
+
+Size of dataset : 
+500 MB
+
+Problem statement :
+
+1. Find total number of comments for each category
+2. Find top 5 most viewed videos in each category
+3. Find top 10 uploaders with most user interactions
+
+System Information:
+
+cloudera-demo-0.3.7 VM
+RAM 3.0 GB
+HardDisk capacity 8.00 GB
+

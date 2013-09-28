@@ -1,0 +1,36 @@
+MAPREDUCE PROJECT
+
+
+Use Case: 
+Analyzing Github event archive data
+
+DataSet details:
+http://www.githubarchive.org/
+GitHub Archive is a project to record the public GitHub timeline, archive it, and make it easily accessible for further analysis. GitHub provides 18 event types, which range from new commits and fork events, to opening new tickets, commenting, and adding members to a project.
+
+Size of Dataset :
+800 MB
+
+Problem statement :
+1. Find total count of each event type.
+2. Find number of events created by each user for specific day.
+3. Find count of number of “create events” per hour.
+
+System Information
+cloudera-demo-0.3.7 VM
+RAM 3.0 GB
+Harddisk capacity 8.00 GB
+
+Initial Data preparation:
+#get the data from the website
+wget http://data.githubarchive.org/2013-07-{01..31}-{0..23}.json.gz
+
+#Unzip the files
+find . -name "*.gz" -exec gunzip {} \;
+
+#copy to HDFS
+hadoop dfs -copyFromLocal /home/cloudera/githubarchive/github/*.json /user/cloudera/gitin
+
+Running the code:  (Pseudo-Distributed Mode)
+$hadoop jar githubhadoop.jar com.hadoop.github.EventTypeCount /user/cloudera/input  /user/cloudera/output
+

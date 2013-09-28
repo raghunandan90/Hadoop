@@ -1,0 +1,42 @@
+PIG PROJECT
+
+USE CASE:
+Analysing movie information.
+
+
+DataSet details:
+http://www.grouplens.org/node/73
+
+GroupLens Research has collected and made available rating data sets from the MovieLens web site (http://movielens.umn.edu). The data sets were collected over various periods of time, depending on the size of the set. 
+
+Link of dataset : http://www.grouplens.org/sites/www.grouplens.org/external_files/data/ml-10m.zip
+
+Dataset description : MovieLens 10M - Consists of 10 million ratings and 100,000 tag applications applied to 10,000 movies by 72,000 users.
+
+Ratings Data File Structure
+All ratings are contained in the file ratings.dat. Each line of this file represents one rating of one movie by one user, and has the following format:
+UserID::MovieID::Rating::Timestamp
+
+Tags Data File Structure
+All tags are contained in the file tags.dat. Each line of this file represents one tag applied to one movie by one user, and has the following format:
+UserID::MovieID::Tag::Timestamp
+
+Movies Data File Structure
+Movie information is contained in the file movies.dat. Each line of this file represents one movie, and has the following format:
+MovieID::Title::Genres
+
+
+Size of dataset :
+257 MB
+
+Problem statement :
+1.	Find tags associated with each movie.
+2.	Find top 100 movies with maximum average ratings. 
+3.	Find top 10 movies in each genre.  
+
+System Information:
+cloudera-demo-0.3.7 VM
+RAM 3.0 GB
+Harddisk capacity 8.00 GB
+
+

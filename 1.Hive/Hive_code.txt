@@ -1,0 +1,70 @@
+CODE:
+
+##create table 
+create table youtube_data(videoid string , uploader string , age int , category string , length int, views int, rate float, ratings int , comments int , relatedids string) row format delimited fields terminated by '\t' stored as textfile;
+
+##load file to hive
+load data local inpath '/home/cloudera/Edureak_POC_Datasets/edurekahive/080609/0.txt' into table youtube_data;
+Also find script below titled “To automate upload to hive”
+
+##Queries
+1. Select category, sum(comments) from youtube_data group by category;
+
+2. SELECT category, videoid, views FROM (SELECT category, videoid, rank(category) as rank, views FROM youtube_data WHERE category is NOT NULL  DISTRIBUTE BY category SORT BY category, views desc ) a  WHERE rank(category) < 5 ORDER BY category, rank(category);
+
+
+Other Scripts
+
+To automate upload to hive
+
+cd $1
+unzip "*.zip"
+for filename in `ls -d -1 $PWD/*/*.txt`
+do
+	lenf=`expr length $filename`
+	lenn=`expr $lenf - 6`
+	sub=`echo $filename | cut -b $lenn-$lenf`
+	echo $sub
+	if [ "$sub" = "log.txt" ]
+	then
+		echo "log file"
+	else 
+		echo $filename
+		sudo hive -e "load data local inpath '$filename' into table youtube_data"
+	fi
+done
+
+
+
+UDF :: Rank.java
+
+package com.example.hive.udf;
+import org.apache.hadoop.hive.ql.exec.UDF;
+
+public final class Rank extends UDF{
+    private int  counter;
+    private String last_key;
+    public int evaluate(final String key){
+	  if ( !key.equalsIgnoreCase(this.last_key) ) {
+	     this.counter = 0;
+	     this.last_key = key;
+	  }
+	  return this.counter++;
+    }
+}
+
+Below is the complete sequence of commands required to get the Query-2 working.
+
+#compile
+javac -classpath /usr/lib/hive/lib/hive-serde-0.7.0-cdh3u0.jar:/usr/lib/hive/lib/hive-exec-0.7.0-cdh3u0.jar:/usr/lib/hadoop/hadoop-core.jar Rank.java
+
+#create jar
+jar -cf Rank.jar ./com/example/hive/udf/Rank.class
+
+#add jar and create function
+
+$sudo hive
+>add jar Rank.jar;
+>create temporary function rank as 'com.example.hive.udf.Rank';
+
+
